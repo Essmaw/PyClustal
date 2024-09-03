@@ -1,0 +1,18 @@
+name: clustalenv
+channels:
+    - conda-forge
+    - nodefaults
+dependencies:
+    - python
+    # Linters and formaters
+    - pycodestyle
+    - pydocstyle
+    - pylint
+    - black
+    - ruff
+    - mypy
+    # Logging
+    - loguru
+    # IU : Web app
+    - gradio
+
