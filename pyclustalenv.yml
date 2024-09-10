@@ -1,9 +1,18 @@
-name: clustalenv
+name: pyclustalenv
 channels:
     - conda-forge
     - nodefaults
 dependencies:
     - python
+    - numpy
+    - regex
+    # Manipulate fasta files
+    - biopython
+    # Visualization in terminal
+    - ete3 #Tree
+    - tabulate #Numpy matrix
+    # Paralelism
+    - futures
     # Linters and formaters
     - pycodestyle
     - pydocstyle
@@ -15,4 +24,5 @@ dependencies:
     - loguru
     # IU : Web app
     - gradio
+    
 
