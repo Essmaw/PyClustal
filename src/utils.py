@@ -164,7 +164,7 @@ def pairwise_alignment(first_sequence: tuple, second_sequence: tuple, sub_matrix
         return alignment_score
     else:
         # Return the aligned sequences by backtracking through the score matrix
-        aligned_seq1, aligned_seq2 = backtracking(seq1, seq2, scores, sub_matrix, gap_open, gap_ext)
+        aligned_seq1, aligned_seq2 = backtracking([seq1], seq2, scores, sub_matrix, gap_open, gap_ext, False)
         
         if tag_log:
             logger.debug(f"Aligned sequences:")
@@ -173,7 +173,7 @@ def pairwise_alignment(first_sequence: tuple, second_sequence: tuple, sub_matrix
             logger.success("Pairwise sequence alignment performed successfully.\n")
         
         return [aligned_seq1, aligned_seq2]
-
+    
 
 def align_and_update(seq1_id: str, seq2_id: str, seqs: Dict[str, str], sub_matrix: Dict[str, int], gap_open: int, gap_ext: int, tag_log: bool) -> Tuple[str, str, int]:
     """Wrapper function to perform pairwise alignment between two sequences for parallel processing.
@@ -254,6 +254,56 @@ def flatten_tree(tree_tuple: Tuple) -> List[str]:
     return flat_tree
 
 
+def calculate_sum_of_pairs_score(aligned_seqs: list, new_seq: str, position_i: str, position_j: str, sub_matrix: dict, gap_open: int) -> int:
+    """
+    Calculate the sum of pairs score for matching a new sequence to an existing alignment.
+    
+    Parameters
+    ----------
+    aligned_seqs: List[str]
+        List of already aligned sequences.
+    new_seq: str
+        The new sequence to be aligned.
+    position_i: int
+        The position in the aligned sequences.
+    position_j: int
+        The position in the new sequence.
+    sub_matrix: Dict[str, int]
+        The substitution matrix as a dictionary with the amino acid pair as key and the substitution score as value.
+        Example : {"AA": 1, "AC": -1, "AD": -2, "AE": -1, ...}
+    gap_open: int
+        The gap opening penalty.
+
+    Returns
+    -------
+    score: int
+        The sum of pairs score for the given positions in the alignment and new sequence.
+    """
+    score = 0
+    # Compare each aligned sequence with the new sequence at the given positions
+    for i,  aligned_seq in enumerate(aligned_seqs):
+        res_seq_aligned = aligned_seq[position_i]
+        res_seq_new = new_seq[position_j]
+        if res_seq_new == "-" and res_seq_aligned == "-":
+            score += 6
+        else:
+            score += sub_matrix.get((str(res_seq_aligned + res_seq_new)), gap_open)
+    
+    # Compare residues within the aligned sequences at the current position (avoiding double comparisons)
+    for i in range(len(aligned_seqs)):
+        seq1 = aligned_seqs[i]
+        for j in range(i + 1, len(aligned_seqs)):
+            seq2 = aligned_seqs[j]
+            res_seq1 = seq1[position_i]
+            res_seq2 = seq2[position_i]
+            if res_seq1 == "-" and res_seq2 == "-":
+                score += 6
+            else:
+                score += sub_matrix.get((str(res_seq1 + res_seq2)), gap_open)
+
+    return score
+
+
 def get_conservation_groups_from_matrix(sub_matrix: Dict[str, int], strong_threshold: float = 0.5, weak_threshold: float = 0) -> Tuple[List[set], List[set]]:
     """Extract strong and weak conservation groups from a substitution matrix.
     
@@ -279,13 +329,11 @@ def get_conservation_groups_from_matrix(sub_matrix: Dict[str, int], strong_thres
 
     for pair, score in sub_matrix.items():
         aa1, aa2 = pair[0], pair[1]
-
         if aa1 != aa2:
-
             if score > strong_threshold:
                 strong_similarity_groups[aa1].add(aa2)
                 strong_similarity_groups[aa2].add(aa1)
-            
+
             elif weak_threshold < score <= strong_threshold:
                 weak_similarity_groups[aa1].add(aa2)
                 weak_similarity_groups[aa2].add(aa1)
@@ -315,7 +363,7 @@ def get_consensus_symbol(column_residues: List[str], sub_matrix: Dict[str, int])
     strong_groups, weak_groups = get_conservation_groups_from_matrix(sub_matrix)
 
     # Filter out gaps ('-') from the column
-    column_residues = [res for res in column_residues if res != '-']
+    column_residues = [res for res in column_residues]
     
     if len(set(column_residues)) == 1:
         return '*'
@@ -329,5 +377,39 @@ def get_consensus_symbol(column_residues: List[str], sub_matrix: Dict[str, int])
             return '.'
     
     return ' '
+
+
+def format_duration(duration_seconds: float) -> str:
+    """Format the duration into a human-readable string with hours, minutes, and seconds.
+
+    Parameters:
+    -----------
+    duration_seconds : float
+        Duration in seconds.
+
+    Returns:
+    --------
+    str
+        A formatted string representing the duration.
+    """
+    # Compute hours, minutes, and seconds
+    hours = int(duration_seconds // 3600)
+    minutes = int((duration_seconds % 3600) // 60)
+    seconds = round(float(duration_seconds % 60), 1)
+
+    # Construct the message
+    message_parts = []
+
+    if hours > 0:
+        message_parts.append(f"{hours} hour{'s' if hours > 1 else ''}")
+    if minutes > 0:
+        message_parts.append(f"{minutes} minute{'s' if minutes > 1 else ''}")
+    if seconds > 0 or not message_parts:
+        message_parts.append(f"{seconds} second{'s' if seconds > 1 else ''}")
+
+    # Join the message parts
+    return " and ".join(message_parts)
+
+
 
 

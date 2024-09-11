@@ -23,10 +23,10 @@ Arguments:
 
 Example:
 ========
-    python src/pyclustal.py --f data/sequences.fasta --seq-type protein --sub-matrix BLOSOM62 --gap-open -5 --gap-ext -1 --job-name aligned_sequences.fasta --tag-log False
+    python src/pyclustal.py --f data/insulins.fasta --seq-type protein --sub-matrix BLOSOM62 --gap-open -5 --gap-ext -1 --job-name aligned_insulins.fasta --tag-log False
 
-This command will align the sequences contained in the file "data/sequences.fasta" using the blosum62 substitution matrix, a gap opening penalty of 10 and a gap extension penalty of 1. 
-The aligned sequences will be saved in the file "aligned_sequences.fasta" in the results folder. And the alignment process of each pair of sequences will not be logged.
+This command will align the sequences contained in the file "data/insulins.fasta" using the blosum62 substitution matrix, a gap opening penalty of -5 and a gap extension penalty of -1. 
+The aligned sequences will be saved in the file "aligned_insulins.fasta" in the results folder. And the alignment process of each pair of sequences will not be logged.
 """
 
 # METADATA
@@ -53,7 +53,7 @@ from Bio.Align import substitution_matrices
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
 # MODULES IMPORTS
-from utils import validate_args, align_and_update, tuple_to_newick, flatten_tree, get_consensus_symbol
+from utils import validate_args, align_and_update, tuple_to_newick, flatten_tree, calculate_sum_of_pairs_score, get_consensus_symbol, format_duration
 
 
 # CONSTANTS
@@ -131,10 +131,13 @@ def parse_fasta_to_dict(fasta_file_path: str) -> Tuple[Dict[str, str], int, int]
         The maximum number of residues in the sequences.
     """
     logger.info("Parsing the fasta file...")
-    # Load the sequences
-    seqs_complete = SeqIO.to_dict(SeqIO.parse(fasta_file_path, "fasta"))
+    seqs = {}
     # Extract the sequence id and sequence
-    seqs = {seq_id: str(seq.seq) for seq_id, seq in seqs_complete.items()}
+    for record in SeqIO.parse(fasta_file_path, "fasta"):
+        # Use regex or split to extract the ID between '|'
+        seq_id = record.id.split('|')[1] if '|' in record.id else record.id
+        seqs[seq_id] = str(record.seq)
+
     nb_seqs = len(seqs)
     nb_residues_max = max(len(seq) for seq in seqs.values())
     logger.debug(f"Number of sequences: {nb_seqs}")
@@ -172,13 +175,13 @@ def parse_sub_matrix_to_dict(sub_matrix_name: str) -> Dict[str, int]:
     return sub_matrix_dict
 
 
-def backtracking(seq1: str, seq2: str, scores: np.ndarray, sub_matrix: Dict[str, int], gap_open: int, gap_ext: int) -> Tuple[str, str]:
+def backtracking(current_alignment: List[str], seq2: str, scores: np.ndarray, sub_matrix: Dict[str, int], gap_open: int, gap_ext: int, is_multiple: bool = True) -> Tuple[str, str]:
     """ Perform backtracking to find the aligned sequences.
 
     Parameters:
     -----------
-    seq1: str
-        The first sequence to align.
+    current_alignment: List[str]
+        The first sequence or profil to align.
     seq2: str
         The second sequence to align.
     scores: np.ndarray
@@ -190,17 +193,20 @@ def backtracking(seq1: str, seq2: str, scores: np.ndarray, sub_matrix: Dict[str,
         The gap opening penalty.
     gap_ext: int
         The gap extension penalty.
+    is_multiple: bool
+        Whether the alignment is multiple or not. The default value is True.
 
     Returns:
     --------
-    aligned_seq1: str
-        The aligned first sequence.
+    aligned_seq1: List[str]
+        The aligned sequence or profile.
     aligned_seq2: str
         The aligned second sequence.
     """
-    aligned_seq1, aligned_seq2 = [], []
+    aligned_seq1, aligned_seq2 = [[] for _ in range(len(current_alignment))], []
+
     # Begin at the bottom right corner of the score matrix
-    i, j = len(seq1), len(seq2)
+    i, j = len(max(current_alignment, key=len)), len(seq2)
     # Backtrack to find the aligned sequences
     while i > 0 and j > 0:
         # Define the current score and the scores for the diagonal, left and top cell
@@ -209,35 +215,44 @@ def backtracking(seq1: str, seq2: str, scores: np.ndarray, sub_matrix: Dict[str,
         left_score = scores[i-1, j]
         top_score = scores[i, j-1]
         # Calculate scores possible from the current cell
-        match_score = diagonal_score + sub_matrix[str(seq1[i - 1]) + str(seq2[j - 1])]
+        if is_multiple:
+            match_score = diagonal_score + calculate_sum_of_pairs_score(current_alignment, seq2, i - 1, j - 1, sub_matrix, gap_open)
+        else:
+            match_score = diagonal_score + sub_matrix[str(current_alignment[0][i - 1]) + str(seq2[j - 1])]
         gap_seq1_score = top_score + gap_open
         gap_seq2_score = left_score + gap_open
         # Check which cell the current score came from
         if current_score == match_score:
             # Adding residues in the 2 sequences
-            aligned_seq1.append(seq1[i - 1])
+            for k in range(len(aligned_seq1)):
+                    seq_tmp = current_alignment[k]
+                    aligned_seq1[k].append(seq_tmp[i - 1])
             aligned_seq2.append(seq2[j - 1])
             i -= 1
             j -= 1
         elif current_score == gap_seq1_score:
             # Adding the residue in seq2 and a gap in seq1
             aligned_seq2.append(seq2[j - 1])
-            aligned_seq1.append('-')
+            for k in range(len(aligned_seq1)):
+                    seq_tmp = current_alignment[k]
+                    aligned_seq1[k].append('-')
             j -= 1
         elif current_score == gap_seq2_score:
             # Adding the residue in seq1 and a gap in seq2
-            aligned_seq1.append(seq1[i - 1])
+            for k in range(len(aligned_seq1)):
+                    seq_tmp = current_alignment[k]
+                    aligned_seq1[k].append(seq_tmp[i - 1])
             aligned_seq2.append('-')
             i -= 1
         else:
-            raise ValueError(f"The score doesn't equal to one of the possible scores. {current_score} is different from {gap_seq1_score}, {gap_seq2_score}")
+            raise ValueError(f"The score doesn't equal to one of the possible scores. {current_score} is different from {gap_seq1_score}, {gap_seq2_score} and {match_score}.")
             
-    # Reverse the aligned sequences (since we backtracked)
+    # Reverse the aligned sequences to get the correct order
     # Join the lists into strings
-    aligned_seq1 = ''.join(reversed(aligned_seq1))
-    aligned_seq2 = ''.join(reversed(aligned_seq2))
+    aligned_seqs_from_profil = list(''.join(reversed(aligned_seq)) for aligned_seq in aligned_seq1)
+    aligned_seq_str = ''.join(reversed(aligned_seq2))
 
-    return aligned_seq1, aligned_seq2
+    return aligned_seqs_from_profil, aligned_seq_str
 
 
 def pairwise_alignment(first_sequence: tuple, second_sequence: tuple, sub_matrix: Dict[str, int], gap_open: int, gap_ext: int, return_alignment: bool = False, tag_log: bool = False) -> Union[int, list]:
@@ -301,11 +316,11 @@ def pairwise_alignment(first_sequence: tuple, second_sequence: tuple, sub_matrix
         return alignment_score
     else:
         # Return the aligned sequences by backtracking through the score matrix
-        aligned_seq1, aligned_seq2 = backtracking(seq1, seq2, scores, sub_matrix, gap_open, gap_ext)
+        aligned_seq1, aligned_seq2 = backtracking([seq1], seq2, scores, sub_matrix, gap_open, gap_ext, False)
         
         if tag_log:
             logger.debug(f"Aligned sequences:")
-            logger.debug(f"Sequence {id1}: {aligned_seq1}")
+            logger.debug(f"Sequence {id1}: {aligned_seq1[0]}")
             logger.debug(f"Sequence {id2}: {aligned_seq2}")
             logger.success("Pairwise sequence alignment performed successfully.\n")
         
@@ -476,60 +491,10 @@ def perform_upgma(seqs: Dict[str, str], distance_matrix: Dict[str, str]) -> List
     logger.success("Guide tree construction using UPGMA algorithm completed successfully.\n")
 
     return flat_tree
-        
-
-def calculate_sum_of_pairs_score(aligned_seqs: list, new_seq: str, position_i: str, position_j: str, sub_matrix: dict, gap_open: int) -> int:
-    """
-    Calculate the sum of pairs score for matching a new sequence to an existing alignment.
-    
-    Parameters
-    ----------
-    aligned_seqs: List[str]
-        List of already aligned sequences.
-    new_seq: str
-        The new sequence to be aligned.
-    position_i: int
-        The position in the aligned sequences.
-    position_j: int
-        The position in the new sequence.
-    sub_matrix: Dict[str, int]
-        The substitution matrix as a dictionary with the amino acid pair as key and the substitution score as value.
-        Example : {"AA": 1, "AC": -1, "AD": -2, "AE": -1, ...}
-    gap_open: int
-        The gap opening penalty.
-
-    Returns
-    -------
-    score: int
-        The sum of pairs score for the given positions in the alignment and new sequence.
-    """
-    score = 0
-    # Compare each aligned sequence with the new sequence at the given positions
-    for aligned_seq in aligned_seqs:
-        res_seq_aligned = aligned_seq[position_i]
-        res_seq_new = new_seq[position_j]
-        if res_seq_new == "-" and res_seq_aligned == "-":
-            score += 6
-        else:
-            score += sub_matrix.get((str(res_seq_aligned + res_seq_new)), gap_open)
-    
-    # Compare residues within the aligned sequences at the current position (avoiding double comparisons)
-    for i in range(len(aligned_seqs)):
-        seq1 = aligned_seqs[i]
-        for j in range(i + 1, len(aligned_seqs)):
-            seq2 = aligned_seqs[j]
-            res_seq1 = seq1[position_i]
-            res_seq2 = seq2[position_i]
-            if res_seq1 == "-" and res_seq2 == "-":
-                score += 6
-            else:
-                score += sub_matrix.get((str(res_seq1 + res_seq2)), gap_open)
-
-    return score
 
 
 def perform_msa(seqs: Dict[str, str], sub_matrix: Dict[str, Dict[str, int]], gap_open: int, gap_ext: int, guide_tree: List[str]) -> Dict[str, str]:
-    """ Perform the multiple sequence alignment using the guide tree.
+    """Perform the multiple sequence alignment using the guide tree.
     
     Parameters
     -----------
@@ -540,7 +505,7 @@ def perform_msa(seqs: Dict[str, str], sub_matrix: Dict[str, Dict[str, int]], gap
         Example : {"AA": 1, "AC": -1, "AD": -2, "AE": -1, ...}
     gap_open: int
         The gap opening penalty.
-    gap_ext : int
+    gap_ext: int
         The gap extension penalty.
     guide_tree: List[str]
         A list containing the flattened guide tree. 
@@ -559,10 +524,10 @@ def perform_msa(seqs: Dict[str, str], sub_matrix: Dict[str, Dict[str, int]], gap
     id2, seq2 = guide_tree[1], seqs[guide_tree[1]]
     logger.debug(f"Performing pairwise alignment between {id1} and {id2}...")
     aligned_seqs[id1], aligned_seqs[id2] = pairwise_alignment((id1,seq1), (id2,seq2), sub_matrix, gap_open, gap_ext, True)
-    current_alignment = [aligned_seqs[id1], aligned_seqs[id2]]
-    
+    current_alignment = [aligned_seqs[id1][0], aligned_seqs[id2]]
+
     # Step 2 : Iterate over the guide tree to align the other sequences
-    for i in range(2, len(guide_tree)):
+    for i in tqdm(range(2, len(guide_tree)), desc="Aligning sequences"):
         seq_id, seq_to_be_aligned = guide_tree[i], seqs[guide_tree[i]]
         logger.debug(f"Adding sequence '{seq_id}' to the existing alignment...")
 
@@ -584,79 +549,20 @@ def perform_msa(seqs: Dict[str, str], sub_matrix: Dict[str, Dict[str, int]], gap
                 gap_seq2 = scores[i, j-1] + gap_open
                 # Calculate the best score
                 scores[i, j] = max(match, gap_seq1, gap_seq2)
-        logger.debug(f"Score aligment : \n{scores[aligned_seqs_len, seq_to_be_aligned_len]}")
 
         # Traceback to get the aligned sequence
-        align_m = [''] * len(current_alignment)
-        align_n = ''
-        # Begin at the bottom right corner of the score matrix
-        i, j = aligned_seqs_len, seq_to_be_aligned_len
-        # Backtrack to find the aligned sequences
-        while i > 0 and j > 0:
-            # Define the current score and the scores for the diagonal, left and top cell
-            current_score = scores[i, j]
-            diagonal_score = scores[i-1, j-1] 
-            left_score = scores[i-1, j]
-            top_score = scores[i, j-1]
-            # Calculate scores possible from the current cell
-            match_score = diagonal_score + calculate_sum_of_pairs_score(current_alignment, seq_to_be_aligned, i - 1, j - 1, sub_matrix, gap_open)
-            gap_seq1_score = top_score + gap_open
-            gap_seq2_score = left_score + gap_open
-            # Check which cell the current score came from
-            if current_score == match_score:
-                # Adding residues in the 2 sequences
-                for k in range(len(align_m)):
-                    seq_tmp = current_alignment[k]
-                    align_m[k] += seq_tmp[i - 1]
-                align_n += seq_to_be_aligned[j - 1]
-                i -= 1
-                j -= 1
-            elif current_score == gap_seq1_score:
-                # Adding the residue in the new sequence to be aligned and a gap in profil1
-                align_n += seq_to_be_aligned[j - 1]
-                align_m = [seq + '-' for seq in align_m]
-                j -= 1
-            elif current_score == gap_seq2_score:
-                # Adding the residue in profil1 and a gap in seq2
-                align_n += '-'
-                for k in range(len(align_m)):
-                    seq_tmp = current_alignment[k]
-                    align_m[k] += seq_tmp[i - 1]
-                i -= 1
-            else:
-                raise ValueError(f"The score doesn't equal to one of the possible scores. {current_score} is different from gap_seq1_score {gap_seq1_score}, gap_seq2_score {gap_seq2_score} and match_score {match_score}")
-        
-        # Reverse the aligned sequences (since we backtracked)
-        # Join the lists into strings
-        # aligned_seqs_from_profil = tuple(''.join(reversed(aligned_seq)) for aligned_seq in aligned_profil1)
-        #aligned_seq_str = ''.join(reversed(aligned_seq))
-        while j > 0:
-            align_n += seq_to_be_aligned[j - 1]
-            align_m = [seq + '-' for seq in align_m]
-            j -= 1
-        while i > 0:
-            align_n += '-'
-            for k in range(len(align_m)):
-                seq_tmp = current_alignment[k]
-                align_m[k] += seq_tmp[i - 1]
-            i -= 1
-
-        # reverse the strings since we traced back from the last position
-        align_m = [k[::-1] for k in align_m]
-        align_n = align_n[::-1]
+        aligned_seqs_from_profil, aligned_seq_str = backtracking(current_alignment, seq_to_be_aligned, scores, sub_matrix, gap_open, gap_ext)
 
         # Update the aligned_seqs dictionary
-        aligned_seqs[seq_id] = align_n
+        aligned_seqs[seq_id] = aligned_seq_str
         # Update the existing aligned sequences in the dictionary
         for k, key in enumerate(list(aligned_seqs.keys())):
             if key != seq_id:  # Avoid overwriting the new sequence
-                aligned_seqs[key] = align_m[k]  # Update the already aligned sequences
-
+                aligned_seqs[key] = aligned_seqs_from_profil[k]  # Update the already aligned sequences
 
         # Update the current alignment
-        del current_alignment
-        current_alignment = align_m
-        current_alignment.append(align_n)
+        current_alignment = aligned_seqs_from_profil
+        current_alignment.append(aligned_seq_str)
 
     return aligned_seqs
 
@@ -706,13 +612,10 @@ def save_aligned_seqs(aligned_seqs: Dict[str, str], job_name: str, input_fasta: 
         output_file = f"results/{job_name}_aligned.clustal"
         with open(output_file, "w") as f:
             f.write("PYCLUSTAL (1.0.0) multiple sequence alignment\n\n")
-
             # To avoid having a long line of sequence -> break the sequence into blocks of 60 characters
             seq_ids = list(aligned_seqs.keys())
             block_size = 60
             seq_length = len(aligned_seqs[seq_ids[0]])
-
-            # Dictionary to track the current sequence length for each sequence
             seq_lengths = {seq_id: 0 for seq_id in seq_ids}
 
             for start in range(0, seq_length, block_size):
@@ -720,19 +623,17 @@ def save_aligned_seqs(aligned_seqs: Dict[str, str], job_name: str, input_fasta: 
                     aligned_seq = aligned_seqs[seq_id]
                     block = aligned_seq[start:start+block_size]
                     seq_lengths[seq_id] += len(block.replace('-', ''))
-                    f.write(f"{seq_id:<15} {block} {seq_lengths[seq_id]}\n")
-                
+                    f.write(f"{seq_id:<10} {block} {seq_lengths[seq_id]:>5}\n")
                 # Calculate the consensus line
                 consensus_line = ""
                 for i in range(start, min(start + block_size, seq_length)):
                     column_residues = [aligned_seqs[seq_id][i] for seq_id in seq_ids]
                     consensus_line += get_consensus_symbol(column_residues, sub_matrix)
-                
-                f.write(f"{'':<15} {consensus_line}\n\n")
+                f.write(f"{'':<10} {consensus_line}\n\n")
     
         logger.success(f"Aligned sequences saved in {output_file}\n")
             
-        
+
 # MAIN PROGRAM
 if __name__ == "__main__":
     logger.info("PyClustal is running...\n")
@@ -746,10 +647,6 @@ if __name__ == "__main__":
    
     # Load the substitution matrix
     sub_matrix = parse_sub_matrix_to_dict(sub_matrix_name)
-
-    # Uncomment to test the pairwise alignment
-    # seq1, seq2 = ("seq1", "ACGT"), ("seq2", "TACG")
-    # aligned_seq = pairwise_alignment(seq1, seq2, sub_matrix, gap_open, gap_ext, return_alignment=True, tag_log=True)
 
     # Perform a pairwise sequence alignment for all pairs of sequences in parallel
     # Get the score matrix
@@ -768,8 +665,11 @@ if __name__ == "__main__":
     save_aligned_seqs(aligned_seqs, job_name, fasta_file_path, sub_matrix, output_format="clustal")
 
     end_time = time.time()
+    duration_seconds = end_time - start_time
+    duration_message = format_duration(duration_seconds)
+
     logger.success(f"Multiple sequence alignment of {nb_seqs} sequences "
-            f"with a total of {seq_length} residues completed in {(end_time - start_time):.2f} seconds.\n")
+                f"with a total of {seq_length} residues completed in "
+                f"{duration_message}.")
 
     logger.info(f"PyClustal has finished running successfully :)\n")
-
