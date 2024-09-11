@@ -38,19 +38,22 @@ __version__ = "1.0.0"
 
 # LIBRARY IMPORTS
 import os
-import sys
+import time
 import argparse
 import numpy as np
 from tqdm import tqdm
 from typing import Tuple, Dict, Union, List
 
-import re
+
 from ete3 import Tree
 from Bio import SeqIO
 from loguru import logger
 from tabulate import tabulate
 from Bio.Align import substitution_matrices
 from concurrent.futures import ProcessPoolExecutor, as_completed
+
+# MODULES IMPORTS
+from utils import validate_args, align_and_update, tuple_to_newick, flatten_tree, get_consensus_symbol
 
 
 # CONSTANTS
@@ -62,41 +65,25 @@ DEFAULT_TAG_LOG = False
 
 
 # FUNCTIONS
-def get_available_sub_matrices() -> Dict[str, str]:
-    """Get the available substitution matrices names from Biopython.
-
-    Returns:
-    --------
-    sub_matrices_available : dict
-        A dictionary containing the available substitution matrices.
-        The keys are the sequence type and the values are the names of the matrices available for this sequence type.
-    """
-    # Get the name of the available substitution matrices
-    all_sub_matrixes_available = substitution_matrices.load()
-    # Initialize dictionaries for each sequence type
-    sub_matrices_available = {
-        "protein": [],
-        "dna": []
-    }
-    # Regular expressions to detect matrix types
-    dna_regex = re.compile(r"(TRANS|SCHNEIDER|NUC|MEGABLAST|HOXD70)", re.IGNORECASE)
-    
-    # Iterate through all available matrices and classify them
-    for sub_matrix in all_sub_matrixes_available:
-        if dna_regex.search(sub_matrix):
-            sub_matrices_available["dna"].append(sub_matrix)
-        else:
-            sub_matrices_available["protein"].append(sub_matrix)
-    
-    return sub_matrices_available
-
-
 def get_args() -> Tuple[str, str, str, int, int, str, bool]:
     """Parse the command line arguments.
     
     Returns:
     --------
-    
+    f: str
+        The path to the fasta file containing the sequences to align.
+    seq_type: str
+        The type of sequences to align. It can be either "dna" or "protein".
+    sub_matrix: str
+        The substitution matrix name to use for the alignment.
+    gap_open: int
+        The gap opening penalty.
+    gap_ext: int
+        The gap extension penalty.
+    job_name: str
+        The name of the output fasta file containing the aligned sequences.
+    tag_log: bool
+        The flag to enable the pairwise alignment in precision mode or not.
     """
     logger.info("Parsing the command line arguments...")
     # Create the parser
@@ -112,33 +99,7 @@ def get_args() -> Tuple[str, str, str, int, int, str, bool]:
     # Parse the arguments
     args = parser.parse_args()
     # Check the arguments
-    # Fasta file does not exist
-    if not os.path.isfile(args.f):
-        logger.error(f"The file '{args.f}' does not exist.")
-        sys.exit(1)
-    # Sequence type is not valid
-    if args.seq_type not in ["dna", "protein"]:
-        logger.error(f"The sequence type '{args.seq_type}' is not valid. It must be either 'dna' or 'protein'.")
-        sys.exit(1)
-    # Substitution matrix is not available
-    if args.sub_matrix not in SUB_MATRIXES_AVAILABLE[args.seq_type]:
-        logger.error(f"The substitution matrix '{args.sub_matrix}' is not available. The available substitution matrices for the sequence type '{args.seq_type}' are: {', '.join(SUB_MATRIXES_AVAILABLE[args.seq_type])}.")
-        sys.exit(1)
-    # Gap penalties are negative
-    if args.gap_open > 0:
-        logger.error("The gap opening penalty must be a negative integer.")
-        sys.exit(1)
-    if args.gap_ext > 0:
-        logger.error("The gap extension penalty must be a negative integer.")
-        sys.exit(1)
-    # Job name is not mentioned
-    if args.job_name is None:
-        # Add _aligned to the input file name
-        args.job_name = f"{os.path.splitext(os.path.basename(args.f))[0]}"
-    # tag_log is not boolean
-    if not isinstance(args.tag_log, bool):
-        logger.error("The tag-log flag must be a boolean value.")
-    
+    validate_args(args)
     # Log the arguments
     logger.debug(f"fasta_file_path: {args.f}")
     logger.debug(f"seq_type: {args.seq_type}")
@@ -152,7 +113,7 @@ def get_args() -> Tuple[str, str, str, int, int, str, bool]:
     return args.f, args.seq_type, args.sub_matrix, args.gap_open, args.gap_ext, args.job_name, args.tag_log
 
 
-def parse_fasta_to_dict(fasta_file_path: str) -> Dict[str, str]:
+def parse_fasta_to_dict(fasta_file_path: str) -> Tuple[Dict[str, str], int, int]:
     """Parse a fasta file and return the sequences as a dictionary.
     
     Parameters:
@@ -164,17 +125,23 @@ def parse_fasta_to_dict(fasta_file_path: str) -> Dict[str, str]:
     --------
     seqs: dict
         A dictionary containing the sequences with the sequence id as key and the sequence as value.
+    nb_seqs : int
+        The number of sequences in the fasta file.
+    nb_residues_max : int
+        The maximum number of residues in the sequences.
     """
     logger.info("Parsing the fasta file...")
     # Load the sequences
     seqs_complete = SeqIO.to_dict(SeqIO.parse(fasta_file_path, "fasta"))
     # Extract the sequence id and sequence
     seqs = {seq_id: str(seq.seq) for seq_id, seq in seqs_complete.items()}
-    logger.debug(f"Number of sequences: {len(seqs)}")
-    logger.debug(f"Number of residues max : {max(len(seq) for seq in seqs.values())}")
+    nb_seqs = len(seqs)
+    nb_residues_max = max(len(seq) for seq in seqs.values())
+    logger.debug(f"Number of sequences: {nb_seqs}")
+    logger.debug(f"Number of residues max : {nb_residues_max}")
     logger.success("Fasta file parsed successfully.\n")
 
-    return seqs
+    return seqs, nb_seqs, nb_residues_max
 
 
 def parse_sub_matrix_to_dict(sub_matrix_name: str) -> Dict[str, int]:
@@ -197,11 +164,8 @@ def parse_sub_matrix_to_dict(sub_matrix_name: str) -> Dict[str, int]:
     logger.debug(f"Substitution matrix:\n {sub_matrix}")
     # Convert the substitution matrix to a dictionary
     sub_matrix_dict = {}
-    # Iterate over the rows
     for i, row in enumerate(sub_matrix):
-        # Iterate over the columns
         for j, value in enumerate(row):
-            # Add the value to the dictionary
             sub_matrix_dict[sub_matrix.alphabet[i] + sub_matrix.alphabet[j]] = value
     logger.success("Substitution matrix parsed successfully.\n")
 
@@ -348,38 +312,6 @@ def pairwise_alignment(first_sequence: tuple, second_sequence: tuple, sub_matrix
         return [aligned_seq1, aligned_seq2]
 
 
-def align_and_update(seq1_id: str, seq2_id: str, seqs: Dict[str, str], sub_matrix: Dict[str, int], gap_open: int, gap_ext: int, tag_log: bool) -> Tuple[str, str, int]:
-    """Function to perform pairwise alignment between two sequences.
-    
-    Parameters:
-    -----------
-    seq1_id: str
-        The id of the first sequence.
-    seq2_id: str
-        The id of the second sequence.
-    seqs: dict
-        A dictionary containing the sequences with the sequence id as key and the sequence as value.
-    sub_matrix: dict
-        The substitution matrix as a dictionary with the amino acid pair as key and the substitution score as value.
-        Example : {"AA": 1, "AC": -1, "AD": -2, "AE": -1, ...}
-    gap_open: int
-        The gap opening penalty.
-    gap_ext: int
-        The gap extension penalty.
-    tag_log: bool
-        If set to True, the log messages are tagged. Good if you want more precision about the alignment. Default is False.
-
-    Returns:
-    --------
-    tuple of str, str, int
-        The id of the first sequence, the id of the second sequence and the alignment score.
-    """
-    seq1 = (seq1_id, seqs[seq1_id])
-    seq2 = (seq2_id, seqs[seq2_id])
-    score = pairwise_alignment(seq1, seq2, sub_matrix, gap_open, gap_ext, False, tag_log)
-    return (seq1_id, seq2_id, score)
-
-
 def perform_parallel_alignment(seqs: Dict[str, str], sub_matrix: Dict[str, int], gap_open: int, gap_ext: int, tag_log: bool = False) -> np.ndarray:
     """Perform a pairwise sequence alignment for all non-redondant pairs of sequences in parallel.
     
@@ -395,7 +327,7 @@ def perform_parallel_alignment(seqs: Dict[str, str], sub_matrix: Dict[str, int],
     gap_ext: int
         The gap extension penalty.
     tag_log: bool
-        If set to True, the log messages are tagged. Good if you want more precision about the alignment. Default is False.
+        If set to True, the log messages of each pairwise alignments are tagged. Good if you want more precision about the alignment. Default is False.
     
     Returns:
     --------
@@ -479,50 +411,6 @@ def score_matrix_to_distance_matrix(score_matrix: np.array, seqs: dict) -> np.ar
     logger.success("Transforming the score matrix into a distance matrix completed successfully.\n")
                    
     return distance_matrix
-
-
-def tuple_to_newick(tree : Tuple[str, Tuple[str, Tuple]]) -> str:
-    """Convert a tuple tree into a Newick string.
-    
-    Parameters:
-    -----------
-    tree: Tuple[str, Tuple[str, Tuple]]
-        A tuple tree containing the sequences and the nested tuples.
-    
-    Returns:
-    --------
-    newick: str
-        A string in Newick format.
-        Example : "(A,(B,(C,D)))"
-    """
-    if isinstance(tree, tuple):
-        return "(" + ",".join(tuple_to_newick(t) for t in tree) + ")"
-    else:
-        return tree[0]
-
-
-def flatten_tree(tree_tuple: Tuple) -> List[str]:
-    """Flatten a nested tuple tree into a linear list.
-    
-    Parameters:
-    -----------
-    tree_tuple: Tuple
-        A tuple tree containing the sequences and the nested tuples.
-        Example : ("A", ("B", ("C", "D")))
-    
-    Returns:
-    --------
-    flat_tree: List[str]
-        A list containing the flattened tree.
-        Example : ["A", "B", "C", "D"]
-    """
-    flat_tree = []
-    for x in tree_tuple:
-        if isinstance(x, tuple):
-            flat_tree.extend(flatten_tree(x))  # Recursive call for nested tuples
-        else:
-            flat_tree.append(x[0])  # Add element if it's not a tuple
-    return flat_tree
 
 
 def perform_upgma(seqs: Dict[str, str], distance_matrix: Dict[str, str]) -> List[str]:
@@ -773,7 +661,7 @@ def perform_msa(seqs: Dict[str, str], sub_matrix: Dict[str, Dict[str, int]], gap
     return aligned_seqs
 
 
-def save_aligned_seqs(aligned_seqs: Dict[str, str], job_name: str, input_fasta: str, output_format: str = "clustal") -> None:
+def save_aligned_seqs(aligned_seqs: Dict[str, str], job_name: str, input_fasta: str, sub_matrix: Dict[str, int], output_format: str = "clustal") -> None:
     """Save the aligned sequences in either FASTA or CLUSTAL format.
 
     Parameters
@@ -784,6 +672,9 @@ def save_aligned_seqs(aligned_seqs: Dict[str, str], job_name: str, input_fasta: 
         The name of the job to save the aligned sequences.
     input_fasta: str
         The path to the input FASTA file for copying headers when using FASTA output.
+    sub_matrix: Dict[str, int]
+        The substitution matrix as a dictionary with the amino acid pair as key and the substitution score as value.
+        Example : {"AA": 1, "AC": -1, "AD": -2, "AE": -1, ...}
     output_format: str
         The output format, either 'fasta' or 'clustal'. Defaults to 'clustal'.
     """
@@ -800,10 +691,10 @@ def save_aligned_seqs(aligned_seqs: Dict[str, str], job_name: str, input_fasta: 
             seq_id = None
             for line in infile:
                 if line.startswith(">"):
-                    seq_id = line.split()[0][1:].strip()  # Remove '>' and any trailing spaces
-                    aligned_seq = aligned_seqs[seq_id]  # Get the aligned sequence
+                    seq_id = line.split()[0][1:].strip()
+                    aligned_seq = aligned_seqs[seq_id]
                     outfile.write(f"{line}")
-                    # Break aligned sequence into lines of 60 characters for fasta format
+                    # Break aligned sequence into lines of 60 characters
                     for i in range(0, len(aligned_seq), 60):
                         outfile.write(aligned_seq[i:i+60] + "\n")
                 else:
@@ -815,24 +706,43 @@ def save_aligned_seqs(aligned_seqs: Dict[str, str], job_name: str, input_fasta: 
         output_file = f"results/{job_name}_aligned.clustal"
         with open(output_file, "w") as f:
             f.write("PYCLUSTAL (1.0.0) multiple sequence alignment\n\n")
+
+            # To avoid having a long line of sequence -> break the sequence into blocks of 60 characters
+            seq_ids = list(aligned_seqs.keys())
+            block_size = 60
+            seq_length = len(aligned_seqs[seq_ids[0]])
+
+            # Dictionary to track the current sequence length for each sequence
+            seq_lengths = {seq_id: 0 for seq_id in seq_ids}
+
+            for start in range(0, seq_length, block_size):
+                for seq_id in seq_ids:
+                    aligned_seq = aligned_seqs[seq_id]
+                    block = aligned_seq[start:start+block_size]
+                    seq_lengths[seq_id] += len(block.replace('-', ''))
+                    f.write(f"{seq_id:<15} {block} {seq_lengths[seq_id]}\n")
+                
+                # Calculate the consensus line
+                consensus_line = ""
+                for i in range(start, min(start + block_size, seq_length)):
+                    column_residues = [aligned_seqs[seq_id][i] for seq_id in seq_ids]
+                    consensus_line += get_consensus_symbol(column_residues, sub_matrix)
+                
+                f.write(f"{'':<15} {consensus_line}\n\n")
     
-            # TO DO
-        
         logger.success(f"Aligned sequences saved in {output_file}\n")
-
-
+            
+        
 # MAIN PROGRAM
 if __name__ == "__main__":
     logger.info("PyClustal is running...\n")
-    
-    # Load substitution matrix available from Biopython
-    SUB_MATRIXES_AVAILABLE = get_available_sub_matrices()
+    start_time = time.time()
 
     # Get the command line arguments
     fasta_file_path, seq_type, sub_matrix_name, gap_open, gap_ext, job_name, tag_log = get_args()
 
-    # Load the sequences
-    seqs = parse_fasta_to_dict(fasta_file_path)
+    # Load the sequences from the FASTA file
+    seqs, nb_seqs, seq_length = parse_fasta_to_dict(fasta_file_path)
    
     # Load the substitution matrix
     sub_matrix = parse_sub_matrix_to_dict(sub_matrix_name)
@@ -855,11 +765,11 @@ if __name__ == "__main__":
     aligned_seqs = perform_msa(seqs, sub_matrix, gap_open, gap_ext, tree)
 
     # Save the aligned sequences
-    save_aligned_seqs(aligned_seqs, job_name, fasta_file_path, output_format="fasta")
+    save_aligned_seqs(aligned_seqs, job_name, fasta_file_path, sub_matrix, output_format="clustal")
 
-    logger.info("PyClustal has finished running.\n")
+    end_time = time.time()
+    logger.success(f"Multiple sequence alignment of {nb_seqs} sequences "
+            f"with a total of {seq_length} residues completed in {(end_time - start_time):.2f} seconds.\n")
 
-
-
-    
+    logger.info(f"PyClustal has finished running successfully :)\n")
 
