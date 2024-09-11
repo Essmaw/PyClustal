@@ -69,7 +69,8 @@ Example :
 ```bash
 python src/pyclustal.py --f data/insulins.fasta --seq-type protein --sub-matrix BLOSOM62 --gap-open -5 --gap-ext -1 --job-name aligned_insulins.fasta --tag-log False
 ```
-> This command will align the sequences contained in the file "data/insulins.fasta" using the blosum62 substitution matrix, a gap opening penalty of -5 and a gap extension penalty of -1. The aligned sequences will be saved in the file "aligned_insulins.fasta" in the results folder. And the alignment process of each pair of sequences will not be logged.
+
+💡 This command will align the sequences contained in the file "data/insulins.fasta" using the blosum62 substitution matrix, a gap opening penalty of -5 and a gap extension penalty of -1. The aligned sequences will be saved in the file "aligned_insulins.fasta" in the results folder. And the alignment process of each pair of sequences will not be logged.
 
 
 ### Web Interface 🌐
