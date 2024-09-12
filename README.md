@@ -81,7 +81,7 @@ This will run the Gradio app in your web browser.
 
 ## Results 📊
 
-The alignment results are provided in both CLUSTAL and FASTA formats. You can find the results in the [results folder](https://github.com/Essmaw/PyClustal/tree/main/results). These alignments are derived from the FASTA files located in the [data folder](https://github.com/Essmaw/PyClustal/tree/main/data). 
+The alignment results are provided in both CLUSTAL and FASTA formats. You can find the results in the [results folder](https://github.com/Essmaw/PyClustal/tree/main/results). These alignments are derived from the FASTA files located in the [data folder](https://github.com/Essmaw/PyClustal/tree/main/data/fasta_files). 
 
 Below are the commands used to obtain the results for each file. Each command aligns the sequences contained in the specified FASTA file, using the appropriate substitution matrix and gap penalties. The aligned sequences will be saved in the results folder. If you prefer FASTA format output, simply add the `--output-format fasta` option to the command.
 
