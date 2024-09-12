@@ -235,8 +235,7 @@ def backtracking(current_alignment: List[str], seq2: str, scores: np.ndarray, su
         if current_score == match_score:
             # Adding residues in the 2 sequences
             for k in range(len(aligned_seq1)):
-                    seq_tmp = current_alignment[k]
-                    aligned_seq1[k].append(seq_tmp[i - 1])
+                aligned_seq1[k].append(current_alignment[k][i - 1])
             aligned_seq2.append(seq2[j - 1])
             i -= 1
             j -= 1
@@ -244,19 +243,31 @@ def backtracking(current_alignment: List[str], seq2: str, scores: np.ndarray, su
             # Adding the residue in seq2 and a gap in seq1
             aligned_seq2.append(seq2[j - 1])
             for k in range(len(aligned_seq1)):
-                    seq_tmp = current_alignment[k]
-                    aligned_seq1[k].append('-')
+                aligned_seq1[k].append('-')
             j -= 1
         elif current_score == gap_seq2_score:
             # Adding the residue in seq1 and a gap in seq2
             for k in range(len(aligned_seq1)):
-                    seq_tmp = current_alignment[k]
-                    aligned_seq1[k].append(seq_tmp[i - 1])
+                aligned_seq1[k].append(current_alignment[k][i - 1])
             aligned_seq2.append('-')
             i -= 1
         else:
             raise ValueError(f"The score doesn't equal to one of the possible scores. {current_score} is different from {gap_seq1_score}, {gap_seq2_score} and {match_score}.")
-            
+    
+    # Handle the case where i > 0 and j == 0 (align remaining seq1 with gaps in seq2)
+    while i > 0:
+        for k in range(len(aligned_seq1)):
+            aligned_seq1[k].append(current_alignment[k][i - 1])
+        aligned_seq2.append('-')
+        i -= 1
+
+    # Handle the case where j > 0 and i == 0 (align remaining seq2 with gaps in seq1)
+    while j > 0:
+        aligned_seq2.append(seq2[j - 1])
+        for k in range(len(aligned_seq1)):
+            aligned_seq1[k].append('-')
+        j -= 1
+
     # Reverse the aligned sequences to get the correct order
     # Join the lists into strings
     aligned_seqs_from_profil = list(''.join(reversed(aligned_seq)) for aligned_seq in aligned_seq1)
