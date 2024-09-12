@@ -185,7 +185,7 @@ def parse_sub_matrix_to_dict(sub_matrix_name: str) -> Dict[str, int]:
     return sub_matrix_dict
 
 
-def backtracking(current_alignment: List[str], seq2: str, scores: np.ndarray, sub_matrix: Dict[str, int], gap_open: int, gap_ext: int, is_multiple: bool = True) -> Tuple[str, str]:
+def backtracking(current_alignment: List[str], seq2: str, scores: np.ndarray, sub_matrix: Dict[str, int], gap_open: int, gap_ext: int, gap_seq1_ext: np.ndarray, gap_seq2_ext: np.ndarray, is_multiple: bool = True) -> Tuple[str, str]:
     """ Perform backtracking to find the aligned sequences.
 
     Parameters:
@@ -203,6 +203,10 @@ def backtracking(current_alignment: List[str], seq2: str, scores: np.ndarray, su
         The gap opening penalty.
     gap_ext: int
         The gap extension penalty.
+    gap_seq1_ext: np.ndarray
+        The matrix tracking gap extensions in the first sequence.
+    gap_seq2_ext: np.ndarray
+        The matrix tracking gap extensions in the second sequence.
     is_multiple: bool
         Whether the alignment is multiple or not. The default value is True.
 
@@ -217,63 +221,72 @@ def backtracking(current_alignment: List[str], seq2: str, scores: np.ndarray, su
 
     # Begin at the bottom right corner of the score matrix
     i, j = len(max(current_alignment, key=len)), len(seq2)
-    # Backtrack to find the aligned sequences
+    
     while i > 0 and j > 0:
         # Define the current score and the scores for the diagonal, left and top cell
         current_score = scores[i, j]
-        diagonal_score = scores[i-1, j-1] 
+        diagonal_score = scores[i-1, j-1]
         left_score = scores[i-1, j]
         top_score = scores[i, j-1]
-        # Calculate scores possible from the current cell
+        # Define match score and gap scores
+        # if multiple alignment
         if is_multiple:
             match_score = diagonal_score + calculate_sum_of_pairs_score(current_alignment, seq2, i - 1, j - 1, sub_matrix, gap_open)
         else:
             match_score = diagonal_score + sub_matrix[str(current_alignment[0][i - 1]) + str(seq2[j - 1])]
-        gap_seq1_score = top_score + gap_open
-        gap_seq2_score = left_score + gap_open
-        # Check which cell the current score came from
+        # If we are extending a gap in seq2
+        if gap_seq2_ext[i-1, j] == 1:
+            gap_seq2_score = left_score + gap_ext
+        else:
+            gap_seq2_score = left_score + gap_open
+        # If we are extending a gap in seq1
+        if gap_seq1_ext[i, j-1] == 1:
+            gap_seq1_score = top_score + gap_ext
+        else:
+            gap_seq1_score = top_score + gap_open
+
+        # Check which cell the current score came from and perform backtracking
         if current_score == match_score:
-            # Adding residues in the 2 sequences
+            # Adding residues in the 2 sequences (match/mismatch)
             for k in range(len(aligned_seq1)):
                 aligned_seq1[k].append(current_alignment[k][i - 1])
             aligned_seq2.append(seq2[j - 1])
             i -= 1
             j -= 1
         elif current_score == gap_seq1_score:
-            # Adding the residue in seq2 and a gap in seq1
+            # Adding a gap in seq1 and a residue in seq2
             aligned_seq2.append(seq2[j - 1])
             for k in range(len(aligned_seq1)):
                 aligned_seq1[k].append('-')
             j -= 1
         elif current_score == gap_seq2_score:
-            # Adding the residue in seq1 and a gap in seq2
+            # Adding a gap in seq2 and a residue in seq1
             for k in range(len(aligned_seq1)):
                 aligned_seq1[k].append(current_alignment[k][i - 1])
             aligned_seq2.append('-')
             i -= 1
         else:
-            raise ValueError(f"The score doesn't equal to one of the possible scores. {current_score} is different from {gap_seq1_score}, {gap_seq2_score} and {match_score}.")
-    
+            raise ValueError(f"The score doesn't equal one of the possible scores. {current_score} is different from {gap_seq1_score}, {gap_seq2_score}, and {match_score}.")
+
     # Handle the case where i > 0 and j == 0 (align remaining seq1 with gaps in seq2)
     while i > 0:
         for k in range(len(aligned_seq1)):
             aligned_seq1[k].append(current_alignment[k][i - 1])
         aligned_seq2.append('-')
         i -= 1
-
     # Handle the case where j > 0 and i == 0 (align remaining seq2 with gaps in seq1)
     while j > 0:
         aligned_seq2.append(seq2[j - 1])
         for k in range(len(aligned_seq1)):
             aligned_seq1[k].append('-')
         j -= 1
-
+    
     # Reverse the aligned sequences to get the correct order
     # Join the lists into strings
-    aligned_seqs_from_profil = list(''.join(reversed(aligned_seq)) for aligned_seq in aligned_seq1)
+    aligned_seqs_from_profile = list(''.join(reversed(aligned_seq)) for aligned_seq in aligned_seq1)
     aligned_seq_str = ''.join(reversed(aligned_seq2))
 
-    return aligned_seqs_from_profil, aligned_seq_str
+    return aligned_seqs_from_profile, aligned_seq_str
 
 
 def pairwise_alignment(first_sequence: tuple, second_sequence: tuple, sub_matrix: Dict[str, int], gap_open: int, gap_ext: int, return_alignment: bool = False, tag_log: bool = False) -> Union[int, list]:
@@ -313,20 +326,39 @@ def pairwise_alignment(first_sequence: tuple, second_sequence: tuple, sub_matrix
 
     # Initialize the score matrix 
     scores = np.zeros((seq1_len + 1, seq2_len + 1), dtype=int)
+    gap_seq1_ext = np.zeros((seq1_len + 1, seq2_len + 1), dtype=int)  # Matrix for tracking gaps in seq1
+    gap_seq2_ext = np.zeros((seq1_len + 1, seq2_len + 1), dtype=int)  # Matrix for tracking gaps in seq2
+
     # Initialize the first row and column
     scores[:, 0] = np.arange(seq1_len + 1) * gap_open
     scores[0, :] = np.arange(seq2_len + 1) * gap_open
+    gap_seq1_ext[:, 0] = np.arange(seq1_len + 1) * gap_ext
+    gap_seq2_ext[0, :] = np.arange(seq2_len + 1) * gap_ext
+
     # Fill the score matrix
     for i in range(1, seq1_len + 1):
         for j in range(1, seq2_len + 1):
             # Calculate the match score
             match = scores[i-1, j-1] + sub_matrix[str(seq1[i - 1]) + str(seq2[j - 1])]
-            # Calculate the gap score for seq1 and seq2
-            gap_seq1 = scores[i-1, j] + gap_open
-            gap_seq2 = scores[i, j-1] + gap_open
-            # Calculate the best score
+            
+            # Calculate the gap score for seq1 (aligned sequence) and seq2 (sequence to be aligned)
+            if gap_seq2_ext[i-1, j] == 1:
+                gap_seq1 = scores[i-1, j] + gap_ext  # Continuing a gap in seq1
+            else:
+                gap_seq1 = scores[i-1, j] + gap_open  # Opening a new gap in seq1
+
+            if gap_seq1_ext[i, j-1] == 1:
+                gap_seq2 = scores[i, j-1] + gap_ext  # Continuing a gap in seq2
+            else:
+                gap_seq2 = scores[i, j-1] + gap_open  # Opening a new gap in seq2
+            
+            # Choose the best score
             scores[i, j] = max(match, gap_seq1, gap_seq2)
-    
+
+            # Update the gap tracking matrices
+            gap_seq1_ext[i, j] = 1 if scores[i, j] == gap_seq1 else 0
+            gap_seq2_ext[i, j] = 1 if scores[i, j] == gap_seq2 else 0
+
     alignment_score = scores[seq1_len, seq2_len]
     if tag_log:
         logger.debug(f"Alignment score = {alignment_score}")
@@ -337,7 +369,7 @@ def pairwise_alignment(first_sequence: tuple, second_sequence: tuple, sub_matrix
         return alignment_score
     else:
         # Return the aligned sequences by backtracking through the score matrix
-        aligned_seq1, aligned_seq2 = backtracking([seq1], seq2, scores, sub_matrix, gap_open, gap_ext, False)
+        aligned_seq1, aligned_seq2 = backtracking([seq1], seq2, scores, sub_matrix, gap_open, gap_ext, gap_seq1_ext, gap_seq2_ext, is_multiple=False)
         
         if tag_log:
             logger.debug(f"Aligned sequences:")
@@ -515,7 +547,7 @@ def perform_upgma(seqs: Dict[str, str], distance_matrix: Dict[str, str]) -> List
 
 
 def perform_msa(seqs: Dict[str, str], sub_matrix: Dict[str, Dict[str, int]], gap_open: int, gap_ext: int, guide_tree: List[str]) -> Dict[str, str]:
-    """Perform the multiple sequence alignment using the guide tree.
+    """Perform the multiple sequence alignment using the guide tree with gap extension penalties.
     
     Parameters
     -----------
@@ -530,7 +562,7 @@ def perform_msa(seqs: Dict[str, str], sub_matrix: Dict[str, Dict[str, int]], gap
         The gap extension penalty.
     guide_tree: List[str]
         A list containing the flattened guide tree. 
-        Example : [ A, B, C, D]
+        Example : [A, B, C, D]
     
     Returns
     --------
@@ -552,27 +584,43 @@ def perform_msa(seqs: Dict[str, str], sub_matrix: Dict[str, Dict[str, int]], gap
         seq_id, seq_to_be_aligned = guide_tree[i], seqs[guide_tree[i]]
         logger.debug(f"Adding sequence '{seq_id}' to the existing alignment...")
 
-        # Initialize the score matrix with zeros
+        # Initialize the score matrix and the gap extension matrices
         aligned_seqs_len = len(max(current_alignment, key=len))
         seq_to_be_aligned_len = len(seq_to_be_aligned)
         scores = np.zeros((aligned_seqs_len + 1, seq_to_be_aligned_len + 1), dtype=int)
+        gap_seq1_ext = np.zeros((aligned_seqs_len + 1, seq_to_be_aligned_len + 1), dtype=int)  # For tracking gap extensions in seq1
+        gap_seq2_ext = np.zeros((aligned_seqs_len + 1, seq_to_be_aligned_len + 1), dtype=int)  # For tracking gap extensions in seq2
+
         # Initialize the first row and column
         scores[:, 0] = np.arange(aligned_seqs_len + 1) * gap_open
         scores[0, :] = np.arange(seq_to_be_aligned_len + 1) * gap_open
-        
+
         # Fill the score matrix
         for i in range(1, aligned_seqs_len + 1):
             for j in range(1, seq_to_be_aligned_len + 1):
                 # Calculate the match score
                 match = scores[i-1, j-1] + calculate_sum_of_pairs_score(current_alignment, seq_to_be_aligned, i - 1, j - 1, sub_matrix, gap_open)
-                # Calculate the gap score for seq1 and seq2
-                gap_seq1 = scores[i-1, j] + gap_open
-                gap_seq2 = scores[i, j-1] + gap_open
+
+                # Calculate the gap score for seq1 (aligned sequence) and seq2 (sequence to be aligned)
+                if gap_seq2_ext[i-1, j] == 1:
+                    gap_seq1 = scores[i-1, j] + gap_ext  # Continuing a gap in seq1
+                else:
+                    gap_seq1 = scores[i-1, j] + gap_open  # Opening a new gap in seq1
+
+                if gap_seq1_ext[i, j-1] == 1:
+                    gap_seq2 = scores[i, j-1] + gap_ext  # Continuing a gap in seq2
+                else:
+                    gap_seq2 = scores[i, j-1] + gap_open  # Opening a new gap in seq2
+
                 # Calculate the best score
                 scores[i, j] = max(match, gap_seq1, gap_seq2)
 
-        # Traceback to get the aligned sequence
-        aligned_seqs_from_profil, aligned_seq_str = backtracking(current_alignment, seq_to_be_aligned, scores, sub_matrix, gap_open, gap_ext)
+                # Update the gap extension matrices
+                gap_seq1_ext[i, j] = 1 if scores[i, j] == gap_seq1 else 0
+                gap_seq2_ext[i, j] = 1 if scores[i, j] == gap_seq2 else 0
+
+        # Traceback to get the aligned sequence with gap extensions
+        aligned_seqs_from_profil, aligned_seq_str = backtracking(current_alignment, seq_to_be_aligned, scores, sub_matrix, gap_open, gap_ext, gap_seq1_ext, gap_seq2_ext)
 
         # Update the aligned_seqs dictionary
         aligned_seqs[seq_id] = aligned_seq_str
