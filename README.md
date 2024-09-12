@@ -79,4 +79,34 @@ gradio_app.py
 This will run the Gradio app in your web browser.
 
 
+## Results 📊
+
+The alignment results are provided in both CLUSTAL and FASTA formats. You can find the results in the [results folder](https://github.com/Essmaw/PyClustal/tree/main/results). These alignments are derived from the FASTA files located in the [data folder](https://github.com/Essmaw/PyClustal/tree/main/data). 
+
+Below are the commands used to obtain the results for each file. Each command aligns the sequences contained in the specified FASTA file, using the appropriate substitution matrix and gap penalties. The aligned sequences will be saved in the results folder. If you prefer FASTA format output, simply add the `--output-format fasta` option to the command.
+
+### Commands for Alignment
+
+- **For `dna.fasta`**:
+  ```bash
+  python src/pyclustal.py --f data/fasta_files/dna.fasta --seq-type dna --sub-matrix NUC.4.4
+  ```
+
+- **For `insulins.fasta`**:
+  ```bash
+  python src/pyclustal.py --f data/fasta_files/insulins.fasta
+  ```
+
+- **For `p53.fasta`**:
+  ```bash
+  python src/pyclustal.py --f data/fasta_files/p53.fasta
+  ```
+
+- **For `zinc_finger.fasta`**:
+  ```bash
+  python src/pyclustal.py --f data/fasta_files/zinc_finger.fasta
+  ```
+
+
+
 Enjoy aligning your sequences! 🎉
