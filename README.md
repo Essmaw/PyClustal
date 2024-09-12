@@ -68,17 +68,6 @@ python src/pyclustal.py --f data/fasta_files/insulins.fasta --seq-type protein -
 💡 This command will align the sequences contained in the file "data/fasta_files/insulins.fasta" using the blosum62 substitution matrix, a gap opening penalty of -5 and a gap extension penalty of -1. The aligned sequences will be saved in the file "aligned_insulins.clustal" in the results folder. And the alignment process of each pair of sequences will not be logged.
 
 
-### Web Interface 🌐
-
-To run the web interface, you can use the following command:
-
-```bash
-gradio_app.py
-```
-
-This will run the Gradio app in your web browser.
-
-
 ## Results 📊
 
 The alignment results are provided in both CLUSTAL and FASTA formats. You can find the results in the [results folder](https://github.com/Essmaw/PyClustal/tree/main/results). These alignments are derived from the FASTA files located in the [data folder](https://github.com/Essmaw/PyClustal/tree/main/data/fasta_files). 
