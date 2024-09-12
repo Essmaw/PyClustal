@@ -101,6 +101,11 @@ def validate_args(args):
     if not isinstance(args.tag_log, bool):
         logger.error("The tag-log flag must be a boolean value.")
         sys.exit(1)
+    
+    # output format is not valid
+    if args.output_format not in ["fasta", "clustal"]:
+        logger.error(f"The output format '{args.output_format}' is not valid. It must be either 'fasta' or 'clustal'.")
+        sys.exit(1)
 
 
 def pairwise_alignment(first_sequence: tuple, second_sequence: tuple, sub_matrix: Dict[str, int], gap_open: int, gap_ext: int, return_alignment: bool = False, tag_log: bool = False) -> Union[int, list]:

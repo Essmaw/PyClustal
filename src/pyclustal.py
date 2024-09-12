@@ -2,7 +2,7 @@
 
 Usage:
 ======
-    python src/pyclustal.py --f [fasta_file_path] --seq-type [seq_type] --sub-matrix [sub_matrix] --gap-open [gap_open] --gap-ext [gap_ext] --job-name [job_name] --tag-log [tag_log]
+    python src/pyclustal.py --f [fasta_file_path] --seq-type [seq_type] --sub-matrix [sub_matrix] --gap-open [gap_open] --gap-ext [gap_ext] --job-name [job_name] --tag-log [tag_log] --output-format [output_format]
 
 Arguments:
 ==========
@@ -20,6 +20,8 @@ Arguments:
         The name of the output fasta file containing the aligned sequences. The default value is name of the input file with "_aligned" appended.
     --tag-log : bool (optional)
         The flag to enable or disable the logging of the alignment process. The default value is stored in DEFAULT_TAG_LOG.
+    --output-format : str (optional)
+        The format of the output file. It can be either "fasta" or "clustal". The default value is stored in DEFAULT_OUTPUT_FORMAT.
 
 Example:
 ========
@@ -62,10 +64,11 @@ DEFAULT_SUB_MATRIX = "BLOSUM62"
 DEFAULT_GAP_OPEN = -5
 DEFAULT_GAP_EXT = -1
 DEFAULT_TAG_LOG = False
+DEFAULT_OUTPUT_FORMAT = "clustal"
 
 
 # FUNCTIONS
-def get_args() -> Tuple[str, str, str, int, int, str, bool]:
+def get_args() -> Tuple[str, str, str, int, int, str, bool, str]:
     """Parse the command line arguments.
     
     Returns:
@@ -84,6 +87,8 @@ def get_args() -> Tuple[str, str, str, int, int, str, bool]:
         The name of the output fasta file containing the aligned sequences.
     tag_log: bool
         The flag to enable the pairwise alignment in precision mode or not.
+    output_format: str
+        The format of the output file. It can be either "fasta" or "clustal".
     """
     logger.info("Parsing the command line arguments...")
     # Create the parser
@@ -96,6 +101,7 @@ def get_args() -> Tuple[str, str, str, int, int, str, bool]:
     parser.add_argument("--gap-ext", type=int, default=DEFAULT_GAP_EXT, help="The gap extension penalty. The default value is strored in DEFAULT_GAP_EXT.")
     parser.add_argument("--job-name", type=str, default=None, help="The name of the output fasta file containing the aligned sequences. The default value is name of the input file with '_aligned' appended.")
     parser.add_argument("--tag-log", type=bool, default=DEFAULT_TAG_LOG, help="Whether to log the pairwise alignment in precision mode or not. The default value is stored in DEFAULT_TAG_LOG.") 
+    parser.add_argument("--output-format", type=str, default=DEFAULT_OUTPUT_FORMAT, help="The format of the output file. It can be either 'fasta' or 'clustal'. The default value is stored in DEFAULT_OUTPUT_FORMAT.")
     # Parse the arguments
     args = parser.parse_args()
     # Check the arguments
@@ -108,9 +114,10 @@ def get_args() -> Tuple[str, str, str, int, int, str, bool]:
     logger.debug(f"gap_ext: {args.gap_ext}")
     logger.debug(f"job_name: {args.job_name}")
     logger.debug(f"tag_log: {args.tag_log}")
+    logger.debug(f"output_format: {args.output_format}")
     logger.success("Command line arguments parsed successfully.\n")
 
-    return args.f, args.seq_type, args.sub_matrix, args.gap_open, args.gap_ext, args.job_name, args.tag_log
+    return args.f, args.seq_type, args.sub_matrix, args.gap_open, args.gap_ext, args.job_name, args.tag_log, args.output_format
 
 
 def parse_fasta_to_dict(fasta_file_path: str) -> Tuple[Dict[str, str], int, int]:
@@ -169,7 +176,10 @@ def parse_sub_matrix_to_dict(sub_matrix_name: str) -> Dict[str, int]:
     sub_matrix_dict = {}
     for i, row in enumerate(sub_matrix):
         for j, value in enumerate(row):
-            sub_matrix_dict[sub_matrix.alphabet[i] + sub_matrix.alphabet[j]] = value
+            key_i = "-" if sub_matrix.alphabet[i] == "*" else sub_matrix.alphabet[i]
+            key_j = "-" if sub_matrix.alphabet[j] == "*" else sub_matrix.alphabet[j]
+            sub_matrix_dict[key_i + key_j] = value
+    
     logger.success("Substitution matrix parsed successfully.\n")
 
     return sub_matrix_dict
@@ -597,7 +607,7 @@ def save_aligned_seqs(aligned_seqs: Dict[str, str], job_name: str, input_fasta: 
             seq_id = None
             for line in infile:
                 if line.startswith(">"):
-                    seq_id = line.split()[0][1:].strip()
+                    seq_id = line.split("|")[1].strip()
                     aligned_seq = aligned_seqs[seq_id]
                     outfile.write(f"{line}")
                     # Break aligned sequence into lines of 60 characters
@@ -640,7 +650,7 @@ if __name__ == "__main__":
     start_time = time.time()
 
     # Get the command line arguments
-    fasta_file_path, seq_type, sub_matrix_name, gap_open, gap_ext, job_name, tag_log = get_args()
+    fasta_file_path, seq_type, sub_matrix_name, gap_open, gap_ext, job_name, tag_log, output_format = get_args()
 
     # Load the sequences from the FASTA file
     seqs, nb_seqs, seq_length = parse_fasta_to_dict(fasta_file_path)
@@ -662,7 +672,7 @@ if __name__ == "__main__":
     aligned_seqs = perform_msa(seqs, sub_matrix, gap_open, gap_ext, tree)
 
     # Save the aligned sequences
-    save_aligned_seqs(aligned_seqs, job_name, fasta_file_path, sub_matrix, output_format="clustal")
+    save_aligned_seqs(aligned_seqs, job_name, fasta_file_path, sub_matrix, output_format)
 
     end_time = time.time()
     duration_seconds = end_time - start_time
