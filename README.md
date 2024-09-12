@@ -22,7 +22,7 @@ To install PyClustal and its dependencies, you need to perform the following ste
 
 ```bash
 git clone https://github.com/Essmaw/PyClustal.git
-cd pyclustal
+cd PyClustal
 ```
 
 ### Install [Conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html).
@@ -62,7 +62,7 @@ Here's a brief explanation of the arguments:
 Example :
 
 ```bash
-python src/pyclustal.py --f data/fasta_files/insulins.fasta --seq-type protein --sub-matrix BLOSOM62 --gap-open -5 --gap-ext -1 --job-name aligned_insulins.fasta --tag-log False  --output-format clustal
+python src/pyclustal.py --f data/fasta_files/insulins.fasta --seq-type protein --sub-matrix BLOSUM62 --gap-open -5 --gap-ext -1 --job-name aligned_insulins.fasta --tag-log False  --output-format clustal
 ```
 
 💡 This command will align the sequences contained in the file "data/fasta_files/insulins.fasta" using the blosum62 substitution matrix, a gap opening penalty of -5 and a gap extension penalty of -1. The aligned sequences will be saved in the file "aligned_insulins.clustal" in the results folder. And the alignment process of each pair of sequences will not be logged.
