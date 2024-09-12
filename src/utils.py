@@ -81,7 +81,7 @@ def validate_args(args):
 
     # Substitution matrix is not available
     if args.sub_matrix not in SUB_MATRIXES_AVAILABLE.get(args.seq_type, []):
-        logger.error(f"The substitution matrix '{args.sub_matrix}' is not available. The available substitution matrices for the sequence type '{args.seq_type}' are: {', '.join(sub_matrices_available.get(args.seq_type, []))}.")
+        logger.error(f"The substitution matrix '{args.sub_matrix}' is not available. The available substitution matrices for the sequence type '{args.seq_type}' are: {', '.join(SUB_MATRIXES_AVAILABLE.get(args.seq_type, []))}.")
         sys.exit(1)
 
     # Gap penalties are negative
