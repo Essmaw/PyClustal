@@ -1,0 +1,194 @@
+PYCLUSTAL (1.0.0) multiple sequence alignment
+
+HG323506.1 -----C-G--G-G--T-A-GGGCC-G-G----G-G-GCTC-G------C-C-CT----C-    25
+HG323507.1 GCG--C-G--G-G--T-A-GGGCCGG-G----G-G-GCTC-G------C-C-CT----C-    29
+HG323508.1 -------------------GGGCC-G-G-A--G-G-GCTC-GC-C-C-C-C-CTC---C-    24
+HG323505.1 --------------------CGCC-------------CCCAG------C-C-AT--G-G-    15
+HG323509.1 -------------------GGGCC-------------A-C-G------G-G--T-A-G--    13
+HG323510.1 -C-A--T-T--A-T-------GCCG-T-G-G------A-C-G-----------T-A----    18
+HG323576.1 ---------------------GGC----G-G--------C-GG-G-C------T------    11
+HG323577.1 G-GC--G-G--C-G-------GGC--T--AG--G-C---CGG-G-G-G-G-T-TC-GG-C    28
+X17240.1   G-G--C-G--GCG--------GGC--T--A-G-G-C---C-G-G-GGG-G-T-TC-GG-C    28
+HG323578.1 -G-G--C-G----G-C-G---GGCT---A--G-G-C---C-G-GGG-G-G-T-T-----C    25
+HG323550.1 G-G-T--G-T--G-C-A-T--GGC--T--A-G--GC---CGGG--G-G-G---T-T----    26
+HG323549.1 -G--GT--GTG---C-A-T--GGC------TAGG--C--CGGGGG-G----T-T---G--    27
+X17237.1   ----G-G--T-GGGCTA-G--GCCGG-GG----------G-G---------T-TC-G--G    24
+HG323513.1 ---GG--G-T----C-G-G--G-T-----A---------G-G-------G---T------    14
+                                * :               : *           *      
+
+HG323506.1 -C--CCCG-AG-C-----CCCGAAATGG-GCG-T-AATG--CG-GG--G---GCCA-G--    61
+HG323507.1 -C--CCCC-A--C-G---CCCGAAACGG-GCG-C-AATG--CG-GG--G---GCCA-G--    65
+HG323508.1 -C--CCCGTA-A-G-GGGCCCGAATTGG-GCG--AAAGG--CG-GG--G---GCCA-G--    64
+HG323505.1 -G--GGC-----------CCCGAA--GGCGCC---AC-G--CG-GG--G---GCCA-G--    44
+HG323509.1 G--G--C-----------CCCG----GA-TA----AA-T--CC-GG--G---GCCA-GA-    38
+HG323510.1 ---G--G---GA---GGGCCCG----G-CTC-T--A--G--C--CG--G---GTCA-GA-    46
+HG323576.1 --------A----GG---CCGG----G--G-----G--GTTC--GGC-GT-CCCCT-G--    36
+HG323577.1 G-T---C-----------CCCT----G-----T-AA-----C--CG--GA-AACC--G--    49
+X17240.1   G-T---C-----------CCCT----G-----T--A---ACC--GGA-A---ACC--G--    49
+HG323578.1 --GG--C---GTC-----CCCT----G------TAA----CC--GG--AA-A-CC--G--    49
+HG323550.1 ------G-G----GCGTCCCCT----G-T-----AA---C-C--CGA-A-A--TC--GC-    52
+HG323549.1 G--G--C---GTC-----CCCT----G-----T-AA----CC--CG--A-AA-TC--GC-    52
+X17237.1   ------C------G-T-CCCC----TG------T-A-A-C-C--CGA--AA--CC--G-C    47
+HG323513.1 --G---GGGA----G-T-CTC-----G--------C-----C-A-G-C--T--CC-TG-T    36
+                             *::     *              *   *       :*  *  
+
+HG323506.1 T--A--A----C-C---CGC---------A-------CG-T-----C-G-GCC-----G-    79
+HG323507.1 T--A--A----C-C---CG----------G-------CT-TG----G-G-GCT-----G-    83
+HG323508.1 T--A--AC-TCC-C---CG-----A--------G--GC--T---C--C-C-C------G-    84
+HG323505.1 A--AG-A-A--C-C---CG---C----C---C---C-C--A--G-A----GC--T-T-G-    66
+HG323509.1 T-GA--A----C-CG--TG--C-C--T-A-C-C-C--C--T-A--------C------A-    59
+HG323510.1 T--A--A----C-C-A-TG-G---A-T----------C--A----A---C-C--------    62
+HG323576.1 T--A--A----C-CG---GAAACC-G-C--CGATATGC-C-GGGG--C---C----G---    66
+HG323577.1 TCGAT-A--TGC-C-G--G------G--G--------C-------------C--G-----    66
+X17240.1   TCGAT-ACG--C-CG---G------G----------GC-C---G-A-AGC-CCG-G-G-G    76
+HG323578.1 CCGA-TA--TGC-C-G--G-G-GC---C-GA-AG---C-C-----------C-G-G-G-G    76
+HG323550.1 CC-T-TAT---G-C----G-----G-G-G--G---C-CG--AA-A-A----C-TTG-G-G    78
+HG323549.1 C--CTTA-T--G-CG---GG-G---G--------C--C-----G-A--AAAC---TTG-G    77
+X17237.1   -CGA-TA----CGC-G--G-GGGC---C---GA-A-GC-------------C-G------    69
+HG323513.1 ---A--A--C-CCCG-T-GG---CG-T-AATG-G-GGCAC-CAGTAAC---CC-T-T---    70
+                 *    : *    *                  *             *        
+
+HG323506.1 T-AGT-----GG------TC--CA---G---------GG-C-A--G-AC-CCG--G---C   102
+HG323507.1 T-AG------GC------CC--CC---GC--------GG-C-A--G-AC-CCA--G---C   106
+HG323508.1 --CG------G-----T--C--CC---G----T----GG-G-G--G-GCGTC---GT--C   106
+HG323505.1 -AAG--C--AG----G---C--CA---G--C---A-AGG------G--C--C--TG---C    88
+HG323509.1 --AG-C--C-G--------C--C----G-C-C-A-A-CC------C--C--C-A-T-A-C    80
+HG323510.1 --AG------G--A-----CAAC--A-G---------GC--C-ATC--C--C-------C    81
+HG323576.1 -AAG-CC-C-G----GG--GGGC--G-GTTCCCAAAAC---C---G--CG-C-----C-C    98
+HG323577.1 -AAGC-C-CGG--G-G-G-G--C----G---------G-----TTC--C--C-AA-A-AC    91
+X17240.1   --GG-C-G--G-T-T--C-C--C----G-------AAG----------C--C-GT-T-CC    97
+HG323578.1 --GGC--G--G-T-T----C--C----C---A-AA--G---C------CG-C-------C    95
+HG323550.1 ---G---G-CGGTAT-ACTCTCC--C-GTCC-T----C------T---C--C-----TTC   106
+HG323549.1 G--G---GC-GGCATG--TC--C----T--C----CAG-TCC-TT---C--CT---T--C   105
+X17237.1   -A-GGGG--AG------G-C--C--T-GT--C-AA--G-C--GG---GCGGC-AG----C    97
+HG323513.1 A--T------G--------C--C-A-TG-A--T---AC-C----T-A-C--CT----CTC    91
+              :      *        :  *              :          *  *       *
+
+HG323506.1 --C-GA-----C-------C--------C--A---TG-A--C-CCC--CGT-CCCG-C--   124
+HG323507.1 --C-GA-----C-------C--------A--A---TG-A--C-CCC--CGT-CCCG-C--   128
+HG323508.1 --C-G------CG------C--------A--A---TG-G--C-CCT--CGC-CCCG-C--   128
+HG323505.1 --A-G------G-G-T-A-C--------A--A---TGAA--C-CC---CGT-CCCG-C--   112
+HG323509.1 --C-A--A---C-------C--------A--A---TG-AT-C-CC---CG--CCC--CAT   102
+HG323510.1 --C-A------C-G-T---C-AGG--T-A--A---TG-A--C-CC--CCG--CCC--CAT   108
+HG323576.1 --C-A-AAG--C-------CGGGGTATAACGA---TG-AG-C-CC--TCG-TCCCG-G--   133
+HG323577.1 --C-G-C-GCCCGG--AAGCC-GGGG-CACAACGGTG-A-TC-CC-T-CG-TCCCG-G--   133
+X17240.1   --CGGA-A-GCCG-G-G-GC--------ACAACGGTG-A-TC-CC-T-CG-TCCC-AC--   133
+HG323578.1 TGCGG-A-AGTC--G-GGGC------ACA--ACGATG-A-TC-CC-T-CG-TCCC-AC--   133
+HG323550.1 CCAGG------C--CT---C----TC--G--A---TGAG--G-TC--TCG--TCC--CGT   135
+HG323549.1 CCA-G--A---C---T---CCT------CG-A---TG-AG-G-TC-T-CG-TCCC-GT--   134
+X17237.1   ---GGT---TCCAG----GC-----------AC--CGCAGAGTCC--TCG--TCC--C-G   127
+HG323513.1 TA--G-A-T--C-------CC-AG-CTG--AACGATG-A--GCAC---CG--CCC--G--   122
+               :      :       *           *   :* :  :  *   **  :**     
+
+HG323506.1 G-GGGC-C----GGCGGC-----GC--G-GAGCC-C-C--CT---C-C---GGAG--G-G   156
+HG323507.1 G-GGGC-C----GGCGGC----GGC--G-GAGCC-C-C--CT---C-C---GGAG--G-G   161
+HG323508.1 G-GGGC-C----CGCGGT----GGC--G-GAGCC-T-C--CG---C-C---GAAG--G-G   161
+HG323505.1 G-GGGC-C----GGCGG---A-GGC--G-G-GCG--GC--C--AGC-C---GGAG--G-G   145
+HG323509.1 G-GGGT-C----GGCGG--T--GGC--G-GAGCC---C--C----CTC--TGGAGA-GAG   137
+HG323510.1 G-GGG--CT---GGTGG---A-GGT--G-GAGCC---C--C----CTC--TGGAG-GGAG   143
+HG323576.1 G-GGG--CC---GGCGG--T--GG---GCGAGG---TC--C--GGC-T---GGAG--G-G   166
+HG323577.1 G-GGG--C--C-GGCGG--T--GG---GCGAGG-T--C--C-G-GC-T---GGAG--G-G   166
+X17240.1   G-GGG--C--C-GGCGG-T---GG---GCGGGG-T--C--C-GG-C-T---GGAG--G-G   166
+HG323578.1 G-GGG--C--C-GACGG-T-G-GG--CG-G-GG-T--C--T-G-GC----TGGAG--G-G   166
+HG323550.1 G-GGG--CT-C-GGCGG-A---GG--GG-GAG----TC--C----CT-CCTGTAGGGGAG   172
+HG323549.1 G-GGG--CT-C-GGCGG--T--GG--GG-GAG-----CATC-T--C--CT-GTAG-GG-G   169
+X17237.1   GAGGG--C-C--GGCGGTT-ATGG-CCG-G-G-----CTGC----C--CG-G-AG--G-G   162
+HG323513.1 GTGGG-GC-G-AGACGG----ACG-C-G-A-A--TCTCCTCT---CT-G--G-AGG-GAG   161
+           * ***  *    :::**      *   * : :     *  :    *     * **  * *
+
+HG323506.1 A-GG-GA-GG-CT-----A-C-CG-CC-C-T-T--A---CC--GGG-GG-AACCA--GGC   190
+HG323507.1 A-GG-GC-GG-CT-----A-C-CG-CC-C-T-T--G---CC--GGG-GG-AACCA--GGC   195
+HG323508.1 C-GGAG--GT-CA-----A-C-CG--C-C-T-TA-A---CC--GGG-GG-AACCA--GGT   195
+HG323505.1 --CC-G--G--C--C-GAAGC-CG--C-C-G-T--A-G-CC--GGG-GC-CACCC--GG-   178
+HG323509.1 --GG-G--G--T-T-A--A-C-CG--C-C-T-T--A--GCC--GGG-GG-AACC--TGG-   168
+HG323510.1 --GG-G--G--T----GAA-C-CA--C-C-T-T--A--GCCA-GGG-G--AACC-C-GG-   174
+HG323576.1 -CCG-G--G--C-T-A--A-CGC---C-C-T-T--T-G-CCC-GCC-G--AACC-C-CG-   198
+HG323577.1 -CCG-G--G--C--T---AACGC---C-C-T-TT----GCC-CGCC-G--AACC--CCG-   198
+X17240.1   -CCG-G--G--C-T---AA-CGC---C-C-T-TT---G-CC-CGCC-G--AACC-C-CG-   198
+HG323578.1 ---CCG--G-AC--TA--A-CGC---C-C-T-T-T---GCC-CGCC-G--AACC--CCG-   198
+HG323550.1 -----G--G-AT------AAC-C--CC-C-T-T-T-A--CCT-GCC-G--AACC-C-CG-   201
+HG323549.1 ----AGATG-T-----A-A-C-C--CC-C-T-T-T-A--CC-TGCC-G--AACC----C-   198
+X17237.1   -----GCTG---------T-C-C-G-C-CATAT-T-AG-CCG-GGG-G-GAACG----G-   192
+HG323513.1 ----AG-GG--------GA-T-A-T-CGCGTCA---A--CC--G-GAG-GAATC----G-   190
+                *  *         : : :   * * : :      **  * : *  :*::    : 
+
+HG323506.1 -C---AGGCCCGGAAGGGAGCAA--C---CTAAC-C-CC--GGA-CGC----CC-G--GC   229
+HG323507.1 -C---AGGCCCGGAAGGGAGCAA--C---CTAAC-C-CC--GGA-CGC----CC-G--GC   234
+HG323508.1 -C---AGGCCCGGAAGGGAGCAG--C---CTAAC-C-CC--GGC-CG-----CG-GC-GC   234
+HG323505.1 -CG--AGGCCCGGAAGGGAGCAG--C---C-GAC-C-CC--GGC-CG----ACC-G--GC   217
+HG323509.1 -C--TAGGCCCGGAAGGGAGCAA--C---CTAAC-C-TC--GGC-CG--T--C--G--AC   207
+HG323510.1 -C-C-AGGCCCGGAAGGGAGCAA--C---CTAAC-C--CT-GGA-CA-C---C-AG---C   213
+HG323576.1 -C-C-AGGCCCGGAAGGGAGCAG--CG--GT-AG-G--CG-GGA-CG--T-TC--GG--C   238
+HG323577.1 -C--CAGGCCCGGAAGGGAGCAG--CG--GT-AG-G--C-GGGA-CG-T-G-C-GG---C   238
+X17240.1   TC---AGGCCCGGAAGGGAGCAG--CG--GT-A--------GG--CG-----G--G-A-C   231
+HG323578.1 -CC--AGGCCCGGAAGGGAGCAG--CG--GT-A-G-G-C-GGG-ACG--TT-C--G-G-C   238
+HG323550.1 CC---AGGCCCGGAAGGGAGCAA--C--GGT-A-G-G-C-AGG-ACG----TC--G-G-C   240
+HG323549.1 -CGCCAGGCCCGGAAGGGAGCAA--C--GGT-A-G-G-CA-GG-ACG---T-C--GG--C   239
+X17237.1   CC-C-AGGCCCGGAAGGGAGCA---G--GCT-A-A-C-CCCGG-ACGAC---C-GG---C   233
+HG323513.1 GC--CAGGTCCGGAAGGGAGCA-ACCGTG-T-C-----C--GG-CCG--T--C-CG---C   229
+            *   ***:*************   :      :        **  *:     :  *   *
+
+HG323506.1 G-TTCG--CG-G-G-GC--------C---ACG-G--GGT----G-A--G---G-C----A   254
+HG323507.1 G-TTCG--CG-G-G-GG--------C---GCG-G--GGT----G-A--G---G-C----A   259
+HG323508.1 G-TTCG--CG-G-GAG------A----A--CG-G--GGG----G-A--GC--G-CG---G   261
+HG323505.1 G-TTCG--CG-G-G-G----G---G-A-A-CG-G--GGG----G-A--G-AAG-C---C-   245
+HG323509.1 G-TTCA--TG-G-G-T--C--A-C------CG-G--GG--C-AG-A--G---G-C--T--   233
+HG323510.1 G-TTCA--TG-G-G-T-T-T-AAC------CG-G--GG-T-T-GAACCG---G-C-----   243
+HG323576.1 G-CTC--CCG-G-G-G---T-------AG-CG-G--GG--GT-G-A--GGGAG-CC-CC-   269
+HG323577.1 G-CTC--CCG-G-G-G-T--A---G-----CG-G--GG-G--TG-AGCG--AG-C-C-C-   268
+X17240.1   G-TTC----G-GCG----C-------T---CGTG--GG-----GTA------G-C-----   252
+HG323578.1 G-CTC----GTGGGG----T--A-G-----CGGG--GG---T-G-AGCG-A-G-C-C---   267
+HG323550.1 G-CTC-AC-GGG-G--GT---G-C-G-GGACG-G--AG--A-AG-A--G---GTC-----   271
+HG323549.1 G-CTC-AC-G-GGGG---T-G---------CGGGACGG-A---GAA--G---GAATCT--   271
+X17237.1   GCTTC-C--GGG-G----------G-T-G-CG-GGGAG-----G-A--GG-TGCC---T-   262
+HG323513.1 GT-TC-A--CCG-G---T-C--AC------CG-GTGTG----AGAA-AG---G-C--T--   258
+           *  **    : * *                ** *   *     * *      * :     
+
+HG323506.1 -A-CG--GC-C---G------GG---CCCC-CTGC-----C-CT-G--G--GC---C---   279
+HG323507.1 -A-CG--GC-T---G------GG---CCCG-CTGC-----CGCC-GA-G--G----G---   285
+HG323508.1 -G-CG--GC-----GC--T--GA---CCC--CCGCGGGGGCGCC-G-CG--G--G---G-   293
+HG323505.1 ---CT--GC---A-G------GGTAACCC-TCTGG-----C-C--T--G--C-T-T-C-A   273
+HG323509.1 ---TG--GT--A-TG--G-AAGG---GCT--CTG------G-C-----G--G--------   255
+HG323510.1 ----G-TG------G-A-TAAGG----CT--CTG-----GC-C-T---GTTG---T-C--   268
+HG323576.1 ----G--G-----CGGAG---GG----G---C-G--------C-----G--G--------   284
+HG323577.1 C-G-G-TG-G-AA-G------GG----C--GC-G----G---C-----G--G--------   287
+X17240.1   ----G--G------G------GGTGA-G---C-G-AGC----C-C-CGGTGGAAG---GG   279
+HG323578.1 C-C-GATG-G-AA-G-----CGG--A-----C-G-------GT-----G--G--------   287
+HG323550.1 T---GG-G------G-TCAA-GG--------A-G-AG-GT--C-T---G--G--G--AG-   295
+HG323549.1 --G-GG-G-G---CGA-----GGGA------G-G---A----C---TGGAGGAC-AT--G   298
+X17237.1   ----G--G--G---G--CTT-CA--A---GCC-G-------CCC----G--T--------   281
+HG323513.1 ----G--G------G------GGT-------A-A--A-T---C-T--AGA-GA-G---G-   277
+               :  *      *      ::          :        :     *           
+
+HG323506.1 C---CTA-C--G-----G-----C------T--G---GCGT--G-------CG-------   296
+HG323507.1 T---CTA-CA-GC---CG-----CA-----A--GC-CGGGG--GC------CGC------   310
+HG323508.1 --G-CTC-C--G-----GT----C----T---CG---G-G---G----A---G------G   311
+HG323505.1 -A-ACT--C-TG--G--G-AG--C--G------G---G-G---G--C---TCG----G--   295
+HG323509.1 ----AT--T--G-----G-----C-T-G-T-A-G-G-G-G-TAG-G-C-A-CG--G--G-   279
+HG323510.1 ----CT-G---G-T-T-G-A-TCCA----T---G---G-G---G-------CT-A-T---   289
+HG323576.1 ----CG-G-A-G--G--GT--TCC----C--ACCCCCG-G---G-------CGC------   308
+HG323577.1 -AG--G-----GTT-CCC--A--C-CCC-----C---G-G---G-------CG------C   308
+X17240.1   --GACG-G--TG-----G-----A---------G---G-G-TCCCCACCCCCG-GGCGC-   308
+HG323578.1 ---------A-G--G--GT--TCC-----C-ACCCCCG-G---G-------CGC------   308
+HG323550.1 ---A-------GAT-ACC-CA--C-CCCA-A------G-G-AAG---C---CA----T--   319
+HG323549.1 CC--------CA-----C-----CC-----------CAAG---G--A-AGCCA-TGC-AC   321
+X17237.1   ---A-----A-G-----G-----C-------A-----G-GT-CGAC-C---CGA-G----   299
+HG323513.1 -AA---AG---GATCATG----GCA----TA-A-G--G-G---G-G-----C-------C   301
+                      :     :     :             : *   :                
+
+HG323506.1 G-------G--GGC--CG---C   304
+HG323507.1 G------CG--GGC--C----C   318
+HG323508.1 GC---C-CG--GGC--T---T-   321
+HG323505.1 G---G-GCG--GGC--C-----   304
+HG323509.1 G--C---CGT-GGC--C--C--   289
+HG323510.1 G-T--C-CA-CGGCTTC-T-T-   303
+HG323576.1 GC-C---CG-CCGC--C-----   318
+HG323577.1 G---C-CCGC-CGC--C-----   318
+X17240.1   G-C----CC---GC--CGCC--   318
+HG323578.1 G----C-C--C-GCCGC----C   318
+HG323550.1 GC-A---C----ACCACTTTT-   332
+HG323549.1 A-C-C-AC-T--TT--T-----   330
+X17237.1   G------C-GT-GCC-C--ACC   310
+HG323513.1 G----A-C-----C--CAT---   308
+           :            :  :     
+
