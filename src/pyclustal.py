@@ -661,7 +661,7 @@ def save_aligned_seqs(aligned_seqs: Dict[str, str], job_name: str, input_fasta: 
     
     if output_format == "fasta":
         # Save in FASTA format, preserving the headers from the input FASTA
-        output_file = f"results/{job_name}_aligned.fasta"
+        output_file = f"results/fasta_format/{job_name}_aligned.fasta"
         with open(input_fasta, "r") as infile, open(output_file, "w") as outfile:
             seq_id = None
             for line in infile:
@@ -678,7 +678,7 @@ def save_aligned_seqs(aligned_seqs: Dict[str, str], job_name: str, input_fasta: 
     
     elif output_format.lower() == "clustal":
         # Save in CLUSTAL format
-        output_file = f"results/{job_name}_aligned.clustal"
+        output_file = f"results/clustal_format/{job_name}_aligned.clustal"
         with open(output_file, "w") as f:
             f.write("PYCLUSTAL (1.0.0) multiple sequence alignment\n\n")
             # To avoid having a long line of sequence -> break the sequence into blocks of 60 characters
