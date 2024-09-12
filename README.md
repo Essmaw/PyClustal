@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img style="vertical-align:middle; width:70%; position:fixed;"
+  <img style="vertical-align:middle; width:90%; position:fixed;"
   src="/data/img/new_banner.png">
 </h1>
 <p align="center" style="width: 500px;">
