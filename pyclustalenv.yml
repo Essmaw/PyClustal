@@ -1,28 +1,17 @@
 name: pyclustalenv
 channels:
+    - defaults
     - conda-forge
-    - nodefaults
 dependencies:
-    - python
     - numpy
     - regex
+    - tqdm
     # Manipulate fasta files
     - biopython
     # Visualization in terminal
     - ete3 #Tree
     - tabulate #Numpy matrix
-    # Paralelism
-    - futures
-    # Linters and formaters
-    - pycodestyle
-    - pydocstyle
-    - pylint
-    - black
-    - ruff
-    - mypy
     # Logging
     - loguru
-    # IU : Web app
-    - gradio
-    
+
 
