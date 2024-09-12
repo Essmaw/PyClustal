@@ -1,15 +1,9 @@
 <h1 align="center">
   <img style="vertical-align:middle; width:90%; position:fixed;"
-  src="/data/img/new_banner.png">
+  src="/data/img/banner.png">
 </h1>
-<p align="center" style="width: 500px;">
-  <i> Reimplementation of Clustal Software in Python
-  </i>
-</p>
-
-<p align="center">
-    <img alt="Made with Python" src="http://ForTheBadge.com/images/badges/made-with-python.svg">
-    <img alt="Made with heart" src="http://ForTheBadge.com/images/badges/built-with-love.svg">
+<p  align="center">
+  <img alt="Static Badge" src="https://img.shields.io/badge/Built_with_science_and_%E2%9D%A4%EF%B8%8F-%23c4e4ff?style=flat-square&logoColor=%23ffcbeb&color=%23c4e4ff">
 </p>
 
 ## Introduction 📚
@@ -52,17 +46,18 @@ conda activate pyclustalenv
 To run PyClustal, you can use the following command:
 
 ```bash
-python src/pyclustal.py --f [fasta_file_path] --seq-type [seq_type] --sub-matrix [sub_matrix] --gap-open [gap_open] --gap-ext [gap_ext] --job-name [job_name] --tag-log [tag_log]
+python src/pyclustal.py --f [fasta_file_path] --seq-type [seq_type] --sub-matrix [sub_matrix] --gap-open [gap_open] --gap-ext [gap_ext] --job-name [job_name] --tag-log [tag_log] --output-format [output_format]
 ```
 
 Here's a brief explanation of the arguments:
-- `--f` or `--fasta_file_path`: Path to the input FASTA file.
-- `--seq-type`: Type of sequences (dna or protein).
-- `--sub-matrix`: Substitution matrix to use.
-- `--gap-open`: Gap opening penalty.
-- `--gap-ext`: Gap extension penalty.
-- `--job-name`: Name of the job.
-- `--tag-log`: The flag to enable the logging of the pairwise alignment process in precision or not.
+- `--f`: Path to the input FASTA file.
+- `--seq-type` (optionnal): Type of sequences (dna or protein).  Default is protein.
+- `--sub-matrix` (optionnal): Substitution matrix to use. Default is BLOSUM62.
+- `--gap-open` (optionnal): Gap opening penalty. Default is -5.
+- `--gap-ext` (optionnal): Gap extension penalty. Default is -1.
+- `--job-name` (optionnal): Name of the job. Default is name of the input file with '_aligned' appended.
+- `--tag-log` (optionnal): The flag to enable the logging of the pairwise alignment process in precision or not. Default is False.
+- `--output-format` (optionnal): The format of the output file (fasta or clustal). Default is clustal.
 
 Example :
 
